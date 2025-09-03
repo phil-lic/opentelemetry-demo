@@ -757,6 +757,7 @@ services:
     volumes:
       - ./src/grafana/grafana.ini:/etc/grafana/grafana.ini
       - ./src/grafana/provisioning/:/etc/grafana/provisioning/
+      - ./zscaler.cer:/etc/ssl/certs/zscaler.cer
     ports:
       - "${GRAFANA_PORT}"
     logging: *logging
