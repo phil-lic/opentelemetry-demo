@@ -16,3 +16,48 @@
 #    pipelines:
 #      traces:
 #        exporters: [spanmetrics, otlphttp/example]
+
+extensions:
+  datadog/extension:
+    api:
+      site: ${env:DD_SITE_PARAMETER}
+      key: ${env:DD_API_KEY}
+    http:
+      endpoint: "localhost:9875"
+      path: "/metadata"
+
+exporters:
+  datadog:
+    traces:
+      compute_stats_by_span_kind: true
+      trace_buffer: 500
+    hostname: "otel-collector-docker"
+    api:
+      site: ${env:DD_SITE_PARAMETER}
+      key: ${env:DD_API_KEY}
+
+processors:
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: "otel"
+        action: upsert
+
+connectors:
+  datadog/connector:
+    traces:
+      compute_stats_by_span_kind: true
+
+service:
+  extensions: [datadog/extension]
+  pipelines:
+    traces:
+      processors: [resource, resourcedetection, memory_limiter, transform, batch]
+      exporters: [otlp, debug, spanmetrics, datadog, datadog/connector]
+    metrics:
+      receivers: [datadog/connector, docker_stats, httpcheck/frontend-proxy, hostmetrics, nginx, otlp, postgresql, redis, spanmetrics]
+      processors: [resource, resourcedetection, memory_limiter, transform, batch]
+      exporters: [otlphttp/prometheus, debug, datadog]
+    logs:
+      processors: [resource, resourcedetection, memory_limiter, transform, batch]
+      exporters: [opensearch, debug, datadog]
